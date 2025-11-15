@@ -15,8 +15,14 @@ import { startPolling } from "./services/mentionPoller.js";
 
 dotenv.config();
 
+const allowedOrigin = process.env.FRONTEND_URL;
+const corsOptions: cors.CorsOptions = {
+  origin: allowedOrigin,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+};
+
 const app = express();
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const server = http.createServer(app);
