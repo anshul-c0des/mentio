@@ -92,6 +92,8 @@ export default function Dashboard() {
   const [youtubeMentions, setYoutubeMentions] = useState<Mention[]>([]);
 
   const [activeAlerts, setActiveAlerts] = useState<SpikeAlert[]>([]);
+  // NEW STATE: Tracks if the initial data fetch is pending
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true); 
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [liveFeedFilter, setLiveFeedFilter] = useState<FilterType>("all");
@@ -121,7 +123,7 @@ export default function Dashboard() {
       try {
         const allMentions = await fetchMentions();
         setMentions(allMentions);
- 
+  
         const normalizeSource = (source: string) => source.toLowerCase();
         
         setRedditMentions(
@@ -135,11 +137,15 @@ export default function Dashboard() {
         );
       } catch (error) {
         console.error("Failed to fetch mentions:", error);
+      } finally {
+        // SET LOADING TO FALSE AFTER ATTEMPTING TO FETCH
+        setIsLoadingInitialData(false); 
       }
     };
 
     loadMentions();
 
+    // ... (Socket.IO setup remains the same)
     socket.on("alert", (alert: Omit<SpikeAlert, 'id'>) => {
       const newAlert = { ...alert, id: Date.now() + Math.random() }; 
       setActiveAlerts(prev => [newAlert, ...prev]);
@@ -369,28 +375,43 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="h-[550px] lg:h-[600px] overflow-y-auto space-y-4 pt-3"> 
-            {filteredLiveMentions.map((m, i) => (
-              <MentionCard
-                key={i}
-                text={m.text}
-                source={m.source}
-                sentiment={m.sentiment}
-                timestamp={m.timestamp}
-              />
-            ))}
-            {filteredLiveMentions.length === 0 && (
-              <p className="text-sm text-center text-muted-foreground pt-10">
-                No mentions match the '{liveFeedFilter}' filter.
-              </p>
+            
+            {/* START: Live Feed Conditional Rendering */}
+            {isLoadingInitialData ? (
+              // Show Loading Spinner
+              <div className="flex flex-col items-center justify-center h-full pt-10 space-y-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p className="text-sm text-center text-muted-foreground">Loading initial mentions...</p>
+              </div>
+            ) : (
+              // Show Mentions or Empty State
+              <>
+                {filteredLiveMentions.map((m, i) => (
+                  <MentionCard
+                    key={i}
+                    text={m.text}
+                    source={m.source}
+                    sentiment={m.sentiment}
+                    timestamp={m.timestamp}
+                  />
+                ))}
+                {filteredLiveMentions.length === 0 && (
+                  <p className="text-sm text-center text-muted-foreground pt-10">
+                    {/* Improved Empty State Message based on filter */}
+                    {liveFeedFilter === 'all' 
+                      ? "No mentions have been collected yet." 
+                      : `No mentions match the '${liveFeedFilter}' filter.`}
+                  </p>
+                )}
+              </>
             )}
+            {/* END: Live Feed Conditional Rendering */}
+
           </CardContent>
         </Card>
       </div>
 
-      {/* --- BOTTOM ROW: Source Feeds (3 Columns) ---
-        FIX: Switched md:grid-cols-3 to lg:grid-cols-3 to prevent distortion on smaller screens. 
-        It will now show 2 columns on tablets, and 3 on desktops (1024px+).
-      */}
+      {/* --- BOTTOM ROW: Source Feeds (3 Columns) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 pt-4"> 
         <SourceFeedCard
             title="Reddit Mentions"

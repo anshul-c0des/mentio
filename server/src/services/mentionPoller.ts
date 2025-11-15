@@ -83,44 +83,61 @@ const processMention = async (mention: { text: string; source: string; url?: str
 };
 
 // Individual fetch functions
-const fetchReddit = async (query: string) => {
+// Individual fetch functions
+const fetchReddit = async (baseQuery: string) => {
   try {
     const parser = await import("rss-parser").then(mod => new mod.default());
-    const feedUrl = `https://www.reddit.com/search.rss?q=${encodeURIComponent(query)}&sort=new`;
+    const advancedQuery = `"${baseQuery}" OR title:"${baseQuery}" (review OR help OR feedback) self:true`;
+    
+    const encodedQuery = encodeURIComponent(advancedQuery);
+
+    const feedUrl = `https://www.reddit.com/search.rss?q=${encodedQuery}&sort=new`;
     const res = await parser.parseURL(feedUrl);
     const feed = res.items.slice(0, limit);
 
-
     for (const item of feed) {
       await processMention({
-        text: item.title + (item.contentSnippet ? ` - ${item.contentSnippet}` : ""),
+        text: (item.contentSnippet ?? item.title ?? "") as string,
         source: "Reddit",
         url: item.link,
         timestamp: new Date(item.pubDate || Date.now()),
       });
     }
   } catch (err) {
-    console.error("Reddit fetch error for query", query, err);
+    console.error("Reddit fetch error for query", baseQuery, err);
   }
 };
 
-const fetchGNews = async (query: string) => {
+const fetchGNews = async (baseQuery: string) => {
   try {
-    const res = await axios.get(
-      `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&token=${process.env.GNEWSAPI_KEY}`
-    );
+    const advancedQuery = `"${baseQuery}" OR ("${baseQuery}" AND (review OR launch OR acquisition OR controversy OR statement))`;
+    
+    const params = new URLSearchParams({
+      q: advancedQuery,
+      lang: 'en',
+      max: '10',
+      token: process.env.GNEWSAPI_KEY!,
+      sortby: 'publishedAt', 
+    });
 
-    const articles = res.data.articles.slice(0, limit);
+    const url = `https://gnews.io/api/v4/search?${params.toString()}`;
+
+    const res = await axios.get(url);
+
+    const articles = res.data.articles.slice(0, limit); 
+    
     for (const article of articles) {
+      const textContent = article.title + (article.description ? ` - ${article.description}` : "");
+
       await processMention({
-        text: article.title + (article.description ? ` - ${article.description}` : ""),
+        text: textContent || article.title || "No Title Provided",
         source: "GNews",
         url: article.url,
         timestamp: new Date(article.publishedAt || Date.now()),
       });
     }
   } catch (err) {
-    console.error("GNews fetch error for query", query, err);
+    console.error("GNews fetch error for query", baseQuery, err);
   }
 };
 

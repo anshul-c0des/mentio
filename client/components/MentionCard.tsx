@@ -46,7 +46,6 @@ export const MentionCard: React.FC<MentionCardProps> = ({ text, source, sentimen
           
           {/* Source */}
           <span className="flex items-center space-x-1 font-medium text-blue-600">
-            <ExternalLink className="w-3 h-3 text-blue-400" />
             <span>{source}</span>
           </span>
           
