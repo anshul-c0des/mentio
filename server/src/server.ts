@@ -31,6 +31,13 @@ export const io = new Server(server, { cors: { origin: "*" } });
 // Connect to MongoDB
 connectDB();
 
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+      status: "up", 
+      message: "Mention Backend API is running!",
+  });
+});
+
 // API routes
 app.use("/api/mentions", mentionRoutes);
 app.use("/api/analytics", analyticsRoute);

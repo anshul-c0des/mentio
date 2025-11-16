@@ -4,12 +4,15 @@ import { io } from "../server.js";
 import TrackedQuery from "../models/TrackedQuery.js";
 import axios from "axios";
 import { trackMention, checkForSpike } from "./spikeDetector.js";
+import Parser from "rss-parser";
 
 let activeQueries: string[] = [];
 const POLL_INTERVAL = 5 * 60 * 1000; // 30 minutes
 let redditInterval: NodeJS.Timer | null = null;
 let gnewsInterval: NodeJS.Timer | null = null;
 const limit = 4;
+
+const parser = new Parser();
 
 // Initialize queries from DB
 export const initializeQueries = async () => {
@@ -83,28 +86,34 @@ const processMention = async (mention: { text: string; source: string; url?: str
 };
 
 // Individual fetch functions
-// Individual fetch functions
 const fetchReddit = async (baseQuery: string) => {
   try {
-    const parser = await import("rss-parser").then(mod => new mod.default());
-    const advancedQuery = `"${baseQuery}" OR title:"${baseQuery}" (review OR help OR feedback) self:true`;
-    
-    const encodedQuery = encodeURIComponent(advancedQuery);
+      const parser = new Parser();
+      
+      const refinedQuery = `(title:"${baseQuery}" OR selftext:"${baseQuery}")`;
+      
+      const encodedQuery = encodeURIComponent(refinedQuery);
+      const feedUrl = `https://www.reddit.com/search.rss?q=${encodedQuery}&sort=top&t=week`;
+      
+      console.log(`Fetching Reddit with URL: ${feedUrl}`);
 
-    const feedUrl = `https://www.reddit.com/search.rss?q=${encodedQuery}&sort=new`;
-    const res = await parser.parseURL(feedUrl);
-    const feed = res.items.slice(0, limit);
+      const res = await parser.parseURL(feedUrl);
+      const feed = res.items.slice(0, limit);
 
-    for (const item of feed) {
-      await processMention({
-        text: (item.contentSnippet ?? item.title ?? "") as string,
-        source: "Reddit",
-        url: item.link,
-        timestamp: new Date(item.pubDate || Date.now()),
-      });
-    }
+      for (const item of feed) {
+          let rawText = (item.contentSnippet ?? item.title ?? "") as string;
+          
+          const cleanedText = rawText.replace(/\[\s*(link|comment)\s*\]/gi, '').trim();
+
+          await processMention({
+              text: cleanedText,
+              source: "Reddit",
+              url: item.link,
+              timestamp: new Date(item.pubDate || Date.now()),
+          });
+      }
   } catch (err) {
-    console.error("Reddit fetch error for query", baseQuery, err);
+      console.error("Reddit fetch error for query", baseQuery, err);
   }
 };
 
