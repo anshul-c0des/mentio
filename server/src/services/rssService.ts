@@ -4,14 +4,28 @@ import { analyzeSentiment, classifyTopic } from "./aiService.js";
 
 const parser = new Parser();
 
-// Define your filtering criteria
-const MINIMUM_TEXT_LENGTH = 50;  // Minimum length for content (e.g., avoid one-liners)
-const EXCLUDED_KEYWORDS = ["tl;dr", "clickbait", "help", "question", "vote", "survey"]; // Filter out unnecessary content
-const RELEVANT_TOPICS = ["marketing", "customer feedback", "product", "support"]; // Relevant topics for your use case
+// filtering criteria
+const MINIMUM_TEXT_LENGTH = 50; // Minimum length for content (e.g., avoid one-liners)
+const EXCLUDED_KEYWORDS = [
+  "tl;dr",
+  "clickbait",
+  "help",
+  "question",
+  "vote",
+  "survey",
+]; // Filter out unnecessary content
+const RELEVANT_TOPICS = [
+  "marketing",
+  "customer feedback",
+  "product",
+  "support",
+]; // Relevant topics for your use case
 
 export const fetchRedditRSSMentions = async (query: string, limit = 2) => {
   try {
-    const feedUrl = `https://www.reddit.com/search.rss?q=${encodeURIComponent(query)}&sort=new`;
+    const feedUrl = `https://www.reddit.com/search.rss?q=${encodeURIComponent(
+      query
+    )}&sort=new`;
     const feed = await parser.parseURL(feedUrl);
 
     const items = feed.items.slice(0, limit); // limit results
@@ -23,7 +37,9 @@ export const fetchRedditRSSMentions = async (query: string, limit = 2) => {
         if (exists) continue;
 
         // Clean text (title + snippet)
-        const text = (item.title + (item.contentSnippet ? ` - ${item.contentSnippet}` : ""))
+        const text = (
+          item.title + (item.contentSnippet ? ` - ${item.contentSnippet}` : "")
+        )
           .replace(/\s+/g, " ")
           .trim();
 
@@ -31,7 +47,12 @@ export const fetchRedditRSSMentions = async (query: string, limit = 2) => {
         if (text.length < MINIMUM_TEXT_LENGTH) continue;
 
         // Skip posts with irrelevant keywords
-        if (EXCLUDED_KEYWORDS.some(keyword => text.toLowerCase().includes(keyword))) continue;
+        if (
+          EXCLUDED_KEYWORDS.some((keyword) =>
+            text.toLowerCase().includes(keyword)
+          )
+        )
+          continue;
 
         // Run AI analysis for sentiment and topic classification
         const sentiment = await analyzeSentiment(text);

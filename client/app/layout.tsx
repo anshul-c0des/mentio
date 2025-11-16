@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "mentio",
   description: "a website to track mentions of your brand",
   icons: {
-    icon: "/favicon.png"
-  }
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

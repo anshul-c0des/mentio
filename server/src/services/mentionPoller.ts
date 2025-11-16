@@ -17,7 +17,7 @@ const parser = new Parser();
 // Initialize queries from DB
 export const initializeQueries = async () => {
   const queries = await TrackedQuery.find();
-  activeQueries = queries.map(q => q.name);
+  activeQueries = queries.map((q) => q.name);
   console.log("Initial queries loaded:", activeQueries);
 };
 
@@ -29,10 +29,10 @@ export const addQuery = (query: string) => {
   }
 };
 export const resetQueries = () => {
-    activeQueries = [];
-    console.log("Active queries cleared");
+  activeQueries = [];
+  console.log("Active queries cleared");
 
-      // Stop polling intervals
+  // Stop polling intervals
   if (redditInterval) {
     redditInterval = null;
   }
@@ -47,7 +47,12 @@ export const resetQueries = () => {
 export const getActiveQueries = () => activeQueries;
 
 // Helper to process a mention
-const processMention = async (mention: { text: string; source: string; url?: string; timestamp?: Date }) => {
+const processMention = async (mention: {
+  text: string;
+  source: string;
+  url?: string;
+  timestamp?: Date;
+}) => {
   if (activeQueries.length === 0) return;
   if (mention.url) {
     const exists = await Mention.findOne({ url: mention.url });
@@ -73,70 +78,73 @@ const processMention = async (mention: { text: string; source: string; url?: str
 
   if (checkForSpike()) {
     const spikeMessage = {
-        type: 'volumeSpike',
-        timestamp: Date.now(),
-        message: `Brand mention volume has spiked! High activity detected.`,
-        // You can add data like the current rate/baseline here if needed.
+      type: "volumeSpike",
+      timestamp: Date.now(),
+      message: `Brand mention volume has spiked! High activity detected.`,
     };
-    
+
     // 5. Send real-time spike alert to the frontend
-    io.emit('alert', spikeMessage); 
+    io.emit("alert", spikeMessage);
     console.log("🔥 Real-Time Spike Alert Sent!");
-}
+  }
 };
 
 // Individual fetch functions
 const fetchReddit = async (baseQuery: string) => {
   try {
-      const parser = new Parser();
-      
-      const refinedQuery = `(title:"${baseQuery}" OR selftext:"${baseQuery}")`;
-      
-      const encodedQuery = encodeURIComponent(refinedQuery);
-      const feedUrl = `https://www.reddit.com/search.rss?q=${encodedQuery}&sort=top&t=week`;
-      
-      console.log(`Fetching Reddit with URL: ${feedUrl}`);
+    const parser = new Parser();
 
-      const res = await parser.parseURL(feedUrl);
-      const feed = res.items.slice(0, limit);
+    const refinedQuery = `(title:"${baseQuery}" OR selftext:"${baseQuery}")`;
 
-      for (const item of feed) {
-          let rawText = (item.contentSnippet ?? item.title ?? "") as string;
-          
-          const cleanedText = rawText.replace(/\[\s*(link|comment)\s*\]/gi, '').trim();
+    const encodedQuery = encodeURIComponent(refinedQuery);
+    const feedUrl = `https://www.reddit.com/search.rss?q=${encodedQuery}&sort=top&t=week`;
 
-          await processMention({
-              text: cleanedText,
-              source: "Reddit",
-              url: item.link,
-              timestamp: new Date(item.pubDate || Date.now()),
-          });
-      }
+    console.log(`Fetching Reddit with URL: ${feedUrl}`);
+
+    const res = await parser.parseURL(feedUrl);
+    const feed = res.items.slice(0, limit);
+
+    for (const item of feed) {
+      let rawText = (item.contentSnippet ?? item.title ?? "") as string;
+
+      const cleanedText = rawText
+        .replace(/\[\s*(link|comment)\s*\]/gi, "")
+        .trim();
+
+      await processMention({
+        text: cleanedText,
+        source: "Reddit",
+        url: item.link,
+        timestamp: new Date(item.pubDate || Date.now()),
+      });
+    }
   } catch (err) {
-      console.error("Reddit fetch error for query", baseQuery, err);
+    console.error("Reddit fetch error for query", baseQuery, err);
   }
 };
 
 const fetchGNews = async (baseQuery: string) => {
   try {
     const advancedQuery = `"${baseQuery}" OR ("${baseQuery}" AND (review OR launch OR acquisition OR controversy OR statement))`;
-    
+
     const params = new URLSearchParams({
       q: advancedQuery,
-      lang: 'en',
-      max: '10',
+      lang: "en",
+      max: "10",
       token: process.env.GNEWSAPI_KEY!,
-      sortby: 'publishedAt', 
+      sortby: "publishedAt",
     });
 
     const url = `https://gnews.io/api/v4/search?${params.toString()}`;
 
     const res = await axios.get(url);
 
-    const articles = res.data.articles.slice(0, limit); 
-    
+    const articles = res.data.articles.slice(0, limit);
+
     for (const article of articles) {
-      const textContent = article.title + (article.description ? ` - ${article.description}` : "");
+      const textContent =
+        article.title +
+        (article.description ? ` - ${article.description}` : "");
 
       await processMention({
         text: textContent || article.title || "No Title Provided",
@@ -150,31 +158,31 @@ const fetchGNews = async (baseQuery: string) => {
   }
 };
 
-// Individual fetch function for YouTube
 const fetchYouTube = async (query: string) => {
   try {
-    // Ensure the API key is set in the environment variables
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       throw new Error("YouTube API key is not set in environment variables.");
     }
 
-    const language = "en";  // Change to your desired language code (e.g., 'es', 'fr')
-    const region = "US";    // Change to your desired region code (e.g., 'IN', 'GB')
-
+    const language = "en"; // Change to your desired language code (e.g., 'es', 'fr')
+    const region = "US"; // Change to your desired region code (e.g., 'IN', 'GB')
     // Send request to YouTube Data API to search for videos
-    const res = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
-      params: {
-        part: "snippet",
-        q: query,
-        type: "video",  // Ensure it's a video type
-        order: "date",  // Get the latest videos
-        maxResults: 5,
-        key: apiKey,
-        hl: language,      // Set the language of the API response
-        regionCode: region, // Set the region for the search
-      },
-    });
+    const res = await axios.get(
+      `https://www.googleapis.com/youtube/v3/search`,
+      {
+        params: {
+          part: "snippet",
+          q: query,
+          type: "video",
+          order: "date",
+          maxResults: 5,
+          key: apiKey,
+          hl: language,
+          regionCode: region, 
+        },
+      }
+    );
 
     // Process each video result
     const rawVideos = res.data.items;
@@ -182,8 +190,8 @@ const fetchYouTube = async (query: string) => {
     for (const video of videos) {
       // Check if videoId exists before trying to access it
       if (!video.id || !video.id.videoId) {
-        console.warn('Skipping item without videoId:', video);
-        continue;  // Skip this item if it doesn't have a videoId
+        console.warn("Skipping item without videoId:", video);
+        continue; // Skip this item if it doesn't have a videoId
       }
 
       const { title, description, publishedAt } = video.snippet;
@@ -208,15 +216,15 @@ const fetchAllForQuery = async (query: string) => {
     // Run both fetch functions in parallel
     await Promise.all([
       fetchReddit(query), // Fetch from Reddit
-      fetchGNews(query),   // Fetch from GNews
-      fetchYouTube(query),  // Fetch from YouTube
+      fetchGNews(query), // Fetch from GNews
+      fetchYouTube(query), // Fetch from YouTube
     ]);
   } catch (err) {
     console.error(`Error fetching mentions for query: ${query}`, err);
   }
 };
 
-// **NEW:** Manual refresh option
+// Manual refresh option
 export const manualRefresh = async () => {
   console.log("Manual refresh triggered.");
   if (activeQueries.length === 0) {
@@ -224,7 +232,7 @@ export const manualRefresh = async () => {
     return;
   }
   // Fetch concurrently for all active queries
-  await Promise.all(activeQueries.map(query => fetchAllForQuery(query)));
+  await Promise.all(activeQueries.map((query) => fetchAllForQuery(query)));
   console.log("Manual refresh complete.");
 };
 
@@ -234,8 +242,10 @@ const startPollingIntervals = () => {
 
   setInterval(async () => {
     // Fetch concurrently for all active queries
-    await Promise.all(activeQueries.map(query => fetchAllForQuery(query)));
-    console.log(`Auto-polling complete (next in ${POLL_INTERVAL / 60000} min).`);
+    await Promise.all(activeQueries.map((query) => fetchAllForQuery(query)));
+    console.log(
+      `Auto-polling complete (next in ${POLL_INTERVAL / 60000} min).`
+    );
   }, POLL_INTERVAL);
 
   console.log("Polling interval started for all queries.");
@@ -244,13 +254,9 @@ const startPollingIntervals = () => {
 // Public startPolling
 export const startPolling = async () => {
   await initializeQueries();
-
-  // 🛑 REMOVED initial fetch loop on server start/refresh
-  // for (const query of activeQueries) {
-  //   await fetchAllForQuery(query);
-  // }
-  console.log("Initial fetch on start/refresh skipped. Use manualRefresh() or wait for auto-poll.");
-
+  console.log(
+    "Initial fetch on start/refresh skipped. Use manualRefresh() or wait for auto-poll."
+  );
 
   // Start intervals only if there are queries
   startPollingIntervals();

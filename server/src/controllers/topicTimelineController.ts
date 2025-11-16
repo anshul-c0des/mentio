@@ -9,7 +9,7 @@ export const getTopicTimeline = async (req: Request, res: Response) => {
   const mentions = await Mention.find({ timestamp: { $gte: since } });
   const timeline: { [topic: string]: { [hour: string]: number } } = {};
 
-  mentions.forEach(m => {
+  mentions.forEach((m) => {
     const hour = new Date(m.timestamp).getHours();
     timeline[m.topic] = timeline[m.topic] || {};
     timeline[m.topic][hour] = (timeline[m.topic][hour] || 0) + 1;

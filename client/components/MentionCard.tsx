@@ -1,8 +1,5 @@
-// client/app/components/MentionCard.tsx
 import React from "react";
-// Import Lucide icons for visual interest
 import { ExternalLink, Clock, ThumbsUp, Meh, ThumbsDown } from "lucide-react";
-// Assuming Card component might be used for structure, but sticking to <div> for a light card view
 
 interface MentionCardProps {
   text: string;
@@ -27,7 +24,12 @@ const sentimentClasses = {
   },
 };
 
-export const MentionCard: React.FC<MentionCardProps> = ({ text, source, sentiment, timestamp }) => {
+export const MentionCard: React.FC<MentionCardProps> = ({
+  text,
+  source,
+  sentiment,
+  timestamp,
+}) => {
   const SentimentIcon = sentimentClasses[sentiment].icon;
 
   return (
@@ -40,15 +42,13 @@ export const MentionCard: React.FC<MentionCardProps> = ({ text, source, sentimen
 
       {/* 2. Footer Section (Metadata) */}
       <div className="flex justify-between items-end pt-2 border-t border-gray-100 mt-auto">
-        
         {/* Source and Timestamp */}
         <div className="flex items-center text-xs text-gray-600 space-x-4">
-          
           {/* Source */}
           <span className="flex items-center space-x-1 font-medium text-blue-600">
             <span>{source}</span>
           </span>
-          
+
           {/* Timestamp */}
           <span className="flex items-center space-x-1 text-gray-500">
             <Clock className="w-3 h-3" />

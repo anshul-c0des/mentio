@@ -1,8 +1,7 @@
-// client/components/BrandHealth.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Gauge } from "lucide-react"; // Icon for visual flair
@@ -17,7 +16,9 @@ export const BrandHealthCard: React.FC = () => {
     const fetchHealth = async () => {
       try {
         // NOTE: Ensure the path matches your backend setup, e.g., /api/brand/health
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/brand/health`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/brand/health`
+        );
         // Use a slight delay to allow the Progress bar animation to be visible
         setTimeout(() => {
           setHealthScore(response.data.score);
@@ -33,9 +34,13 @@ export const BrandHealthCard: React.FC = () => {
   }, []);
 
   // Determine color classes based on score
-  const getProgressColor = (score: number): { indicator: string, text: string } => {
-    if (score >= 75) return { indicator: "bg-green-500", text: "text-green-600" };
-    if (score >= 40) return { indicator: "bg-yellow-500", text: "text-yellow-600" };
+  const getProgressColor = (
+    score: number
+  ): { indicator: string; text: string } => {
+    if (score >= 75)
+      return { indicator: "bg-green-500", text: "text-green-600" };
+    if (score >= 40)
+      return { indicator: "bg-yellow-500", text: "text-yellow-600" };
     return { indicator: "bg-red-500", text: "text-red-600" };
   };
 
@@ -77,19 +82,19 @@ export const BrandHealthCard: React.FC = () => {
             <div className={`text-4xl font-extrabold ${colors.text}`}>
               {score}%
             </div>
-            
+
             {/* Status Text - Use conditional color and medium weight */}
             <p className={`text-sm font-medium ${colors.text}`}>
               Status: {getHealthStatus(score)}
             </p>
-            
+
             {/* Progress Bar - Apply conditional indicator color */}
             <Progress
               value={score}
               className="h-3 bg-gray-200" // Base track color
               indicatorClassName={colors.indicator} // Conditional color for the filled part
             />
-            
+
             {/* Subtext - Subtle gray text */}
             <p className="text-xs text-gray-500 pt-1">
               Based on the last 100 mentions.

@@ -18,7 +18,7 @@ dotenv.config();
 const allowedOrigin = process.env.FRONTEND_URL;
 const corsOptions: cors.CorsOptions = {
   origin: allowedOrigin,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 };
 
 const app = express();
@@ -32,9 +32,9 @@ export const io = new Server(server, { cors: { origin: "*" } });
 connectDB();
 
 app.get("/", (req, res) => {
-  res.status(200).json({ 
-      status: "up", 
-      message: "Mention Backend API is running!",
+  res.status(200).json({
+    status: "up",
+    message: "Mention Backend API is running!",
   });
 });
 

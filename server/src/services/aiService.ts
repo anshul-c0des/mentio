@@ -1,13 +1,29 @@
-import Sentiment from "sentiment"
+import Sentiment from "sentiment";
+import { GoogleGenAI } from "@google/genai";
 
 const sentiment = new Sentiment();
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// Define the available labels
+const CANDIDATE_LABELS = [
+  "product features",
+  "usability/UX",
+  "pricing/billing",
+  "performance",
+  "customer support",
+  "marketing/campaigns",
+  "competitors",
+  "brand perception",
+];
 
 export const analyzeSentiment = (text: string) => {
   if (!text || text.trim() === "") return "neutral";
 
   // Truncate text to an approximation of max tokens (505 characters)
   const MAX_CHARS = 505; // approximation
-  const truncatedText = text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
+  const truncatedText =
+    text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
 
   const result = sentiment.analyze(truncatedText);
 
@@ -17,29 +33,13 @@ export const analyzeSentiment = (text: string) => {
   return "neutral";
 };
 
-
-import { GoogleGenAI } from "@google/genai";
-
-// Initialize the GoogleGenAI client
-// Assumes GEMINI_API_KEY is set in your environment variables
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// Define the available labels
-const CANDIDATE_LABELS = ["product features",
-    "usability/UX",
-    "pricing/billing",
-    "performance",
-    "customer support",
-    "marketing/campaigns",
-    "competitors",
-    "brand perception"];
-
 export const classifyTopic = async (text: string): Promise<string> => {
   const model = "gemini-2.5-flash"; // A fast and capable model for this task
 
   // Create a structured prompt
-  const prompt = `Classify the following text into one of these categories: ${CANDIDATE_LABELS.join(", ")}.
+  const prompt = `Classify the following text into one of these categories: ${CANDIDATE_LABELS.join(
+    ", "
+  )}.
   Respond with only the single, most appropriate category name, exactly as provided in the list, with no other text, explanation, or punctuation.
   
   TEXT: "${text}"`;
@@ -62,7 +62,9 @@ export const classifyTopic = async (text: string): Promise<string> => {
         return result.toLowerCase();
       } else {
         // If the model returns something unexpected, classify it as "unknown"
-        console.warn(`Gemini returned an unlisted label: "${result}" for text: "${text}"`);
+        console.warn(
+          `Gemini returned an unlisted label: "${result}" for text: "${text}"`
+        );
         return "unknown";
       }
     } else {
@@ -75,4 +77,3 @@ export const classifyTopic = async (text: string): Promise<string> => {
     return "unknown";
   }
 };
-

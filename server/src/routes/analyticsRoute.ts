@@ -1,6 +1,8 @@
-// server/src/routes/analyticsRoutes.ts
 import express from "express";
-import { getMentionTrends, getTopTopics } from "../controllers/analyticsController.js";
+import {
+  getMentionTrends,
+  getTopTopics,
+} from "../controllers/analyticsController.js";
 
 const router = express.Router();
 

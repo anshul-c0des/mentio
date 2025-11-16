@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
 // Clear the tracked brand
 router.delete("/", async (req, res) => {
   await TrackedQuery.deleteMany({});
-  await Mention.deleteMany({})
+  await Mention.deleteMany({});
   resetQueries();
   res.sendStatus(204);
 });

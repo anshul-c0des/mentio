@@ -10,8 +10,7 @@ export const calculateBrandHealth = async () => {
       if (m.sentiment === "positive") return acc + 1;
       if (m.sentiment === "negative") return acc - 1;
       return acc;
-    }, 0) /
-    mentions.length;
+    }, 0) / mentions.length;
 
   // normalize to 0-100
   return Math.round((score + 1) * 50);

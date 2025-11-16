@@ -1,4 +1,3 @@
-// server/src/controllers/publicController.ts
 import Mention from "../models/Mention.js";
 import type { Request, Response } from "express";
 

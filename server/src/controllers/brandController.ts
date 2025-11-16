@@ -1,8 +1,7 @@
-// server/src/controllers/brandController.ts
 import { calculateBrandHealth } from "../services/brandHealth.js";
 import type { Request, Response } from "express";
 
-export const getBrandHealth = async (req:Request, res:Response) => {
+export const getBrandHealth = async (req: Request, res: Response) => {
   try {
     const score = await calculateBrandHealth();
     res.json({ score });

@@ -1,4 +1,3 @@
-// client/utils/api.ts
 import axios from "axios";
 
 const backend = process.env.NEXT_PUBLIC_BACKEND_URL;

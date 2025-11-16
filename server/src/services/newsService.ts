@@ -5,7 +5,9 @@ import { analyzeSentiment, classifyTopic } from "./aiService.js";
 export const fetchNewsMentions = async (query = "YourBrand", limit = 2) => {
   try {
     const res = await axios.get(
-      `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=${limit}&token=${process.env.GNEWSAPI_KEY}`
+      `https://gnews.io/api/v4/search?q=${encodeURIComponent(
+        query
+      )}&lang=en&max=${limit}&token=${process.env.GNEWSAPI_KEY}`
     );
 
     const articles = res.data.articles.slice(0, limit);
@@ -16,7 +18,10 @@ export const fetchNewsMentions = async (query = "YourBrand", limit = 2) => {
         const exists = await Mention.findOne({ url: article.url });
         if (exists) continue;
 
-        const text = (article.title + (article.description ? ` - ${article.description}` : ""))
+        const text = (
+          article.title +
+          (article.description ? ` - ${article.description}` : "")
+        )
           .replace(/\s+/g, " ")
           .trim();
 

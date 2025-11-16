@@ -1,4 +1,3 @@
-// server/src/routes/publicRoutes.ts
 import express from "express";
 import { getBrandHealth } from "../controllers/brandController.js";
 
